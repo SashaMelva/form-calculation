@@ -2,27 +2,12 @@
 
 namespace App\Services;
 
-use Exception;
+use App\Services\Exception\DataBaseHandlerConnectionException;
+use App\Services\Exception\DataBaseHandlerDeadlockException;
+use App\Services\Exception\DataBaseHandlerException;
+use App\Services\Exception\DataBaseHandlerTablesException;
+use App\Services\Exception\DataBaseHandlerDeadReplicasException;
 
-class sdbh_exception extends Exception
-{
-}
-
-/* InnoDB запор */
-
-class sdbh_deadlock_exception extends sdbh_exception
-{
-}
-
-/* Потеря соединения */
-
-class sdbh_lost_connection_exception extends sdbh_exception
-{
-}
-
-class sdbh_tables_exception extends sdbh_exception
-{
-}
 class DataBaseHandler
 {
     function __construct($force_master = false)
@@ -59,10 +44,10 @@ class DataBaseHandler
      * @return query result from mysqli query() function
      * @throw sdbh_deadlock_exception in case of innodb deadlock
      * @throw sdbh_exception in case of other query errors
-     * @throws sdbh_deadlock_exception
-     * @throws sdbh_lost_connection_exception
-     * @throws sdbh_tables_exception
-     * @throws sdbh_exception
+     * @throws DataBaseHandlerDeadlockException
+     * @throws DataBaseHandlerConnectionException
+     * @throws DataBaseHandlerTablesException
+     * @throws DataBaseHandlerException
      */
     public function query_exc($query)
     {
@@ -75,31 +60,31 @@ class DataBaseHandler
             $err == 1213 // Deadlock
             || $err == 1205 // Lock timeout
         ) {
-            throw new sdbh_deadlock_exception("Deadlock Query:" . $query);
+            throw new DataBaseHandlerDeadlockException("Deadlock Query:" . $query);
         }
 
         if ($err == 2006 || $err == 2002) {
             $this->sql->close();
             $this->__construct();
-            throw new sdbh_lost_connection_exception("Lost connection!");
+            throw new DataBaseHandlerConnectionException("Lost connection!");
         }
 
         if ($err == 3032) {
             $this->sql->close();
             $this->__construct(true);
-            throw new sdbh_dead_replicas("Dead replicas!");
+            throw new DataBaseHandlerDeadReplicasException("Dead replicas!");
         }
 
         if ($this->sql->errno == 1146 && (strpos($this->sql->error, 'EA_') || strpos($this->sql->error, 'Urls_') || strpos($this->sql->error, 'Z_LM_'))) {
-            throw new sdbh_tables_exception("Query failed! No EA or Urls or Z_LM tables! Query: " . $query);
+            throw new DataBaseHandlerTablesException("Query failed! No EA or Urls or Z_LM tables! Query: " . $query);
         }
 
         if ($this->sql->errno == 1064) {
-            throw new sdbh_exception("Query failed! Full Query:\n" . $query);
+            throw new DataBaseHandlerException("Query failed! Full Query:\n" . $query);
         }
 
         if (!$q) {
-            throw new sdbh_exception("Query failed! " . $this->sql->errno . ": " . $this->sql->error . " Query:\n" . $query);
+            throw new DataBaseHandlerException("Query failed! " . $this->sql->errno . ": " . $this->sql->error . " Query:\n" . $query);
         }
         return $q;
     }
@@ -110,14 +95,10 @@ class DataBaseHandler
         while (True) try {
             $q = $this->query_exc($query);
             break;
-        } catch (sdbh_tables_exception $ex) {
+        } catch (DataBaseHandlerTablesException $ex) {
             $q = false;
             break;
-        } catch (sdbh_deadlock_exception $ex) {
-            continue;
-        } catch (sdbh_lost_connection_exception $ex) {
-            continue;
-        } catch (sdbh_dead_replicas $ex) {
+        } catch (DataBaseHandlerDeadlockException|DataBaseHandlerConnectionException|DataBaseHandlerDeadReplicasException $ex) {
             continue;
         }
         return $q;
@@ -127,7 +108,7 @@ class DataBaseHandler
      * Old, compatibility function to execute plain-text queries in
      * deadlock-safe manner.
      * @param query - query text
-     * @return many interesting things :)
+     * @return mixed interesting things :)
      */
     public function make_query($query, $reconnect = false)
     {
@@ -234,15 +215,15 @@ class DataBaseHandler
 				" . $this->make_str($select_array, 'AND', $tbl_name)
             );
             break;
-        } catch (sdbh_tables_exception $e) {
+        } catch (DataBaseHandlerTablesException $e) {
             break;
-        } catch (sdbh_deadlock_exception $e) {
+        } catch (DataBaseHandlerDeadlockException $e) {
             if ($deadlock_up) {
                 throw $e;
             } else {
                 continue;
             }
-        } catch (sdbh_lost_connection_exception $e) {
+        } catch (DataBaseHandlerConnectionException $e) {
             continue;
         }
         $a_rows = mysqli_affected_rows($this->sql);
@@ -260,7 +241,8 @@ class DataBaseHandler
      * @param $order - "DESC" or Null
      * @param $deadlock_up - throw deadlock_exception out or restart query internaly
      * @param $lock_mode - LISH - LOCK IN SHARE MODE, FU - FOR UPDATE or Null - nothing
-     * @return query result as array of rows, each an associative array
+     * @return array result as array of rows, each an associative array
+     * @throws DataBaseHandlerException
      */
     public function mselect_rows(
         $tbl_name,
@@ -279,7 +261,7 @@ class DataBaseHandler
         } else if ($lock_mode == "FU") {
             $lock_str = "FOR UPDATE";
         } else {
-            throw new sdbh_exception("Unknown lock mode $lock_mode");
+            throw new DataBaseHandlerException("Unknown lock mode $lock_mode");
         }
         while (True) try {
             $query = $this->query_exc("SELECT * FROM `$tbl_name` WHERE
@@ -288,16 +270,16 @@ class DataBaseHandler
                 " $lock_str"
             );
             break;
-        } catch (sdbh_tables_exception $e) {
+        } catch (DataBaseHandlerTablesException $e) {
             $query = false;
             break;
-        } catch (sdbh_deadlock_exception $e) {
+        } catch (DataBaseHandlerDeadlockException $e) {
             if ($deadlock_up) {
                 throw $e;
             } else {
                 continue;
             }
-        } catch (sdbh_lost_connection_exception $e) {
+        } catch (DataBaseHandlerConnectionException $e) {
             continue;
         }
         return $this->get_all_assoc($query);
@@ -315,13 +297,13 @@ class DataBaseHandler
         while (True) try {
             $this->query_exc("DELETE FROM $tbl_name WHERE " . $this->make_str($delete_array, 'AND', $tbl_name));
             break;
-        } catch (sdbh_deadlock_exception $e) {
+        } catch (DataBaseHandlerDeadlockException $e) {
             if ($deadlock_up) {
                 throw $e;
             } else {
                 continue;
             }
-        } catch (sdbh_lost_connection_exception $e) {
+        } catch (DataBaseHandlerConnectionException $e) {
             continue;
         }
         return $this->sql->affected_rows;
@@ -332,7 +314,8 @@ class DataBaseHandler
      * @param $tbl_name - table name
      * @param $rows - array of associative arrays like ("column" => "value"), keys are obtained from the first record
      * @param deadlock_up - throw deadlock exception or restart query automatically
-     * @return number of rows inserted
+     * @return false of rows inserted
+     * @throws DataBaseHandlerDeadlockException
      */
     function insert_rows($tbl_name, $rows, $deadlock_up = False)
     {
@@ -373,31 +356,50 @@ class DataBaseHandler
         while (True) try {
             $this->query_exc("INSERT IGNORE INTO `$tbl_name` ($keys_csv) VALUES $val");
             break;
-        } catch (sdbh_tables_exception $e) {
+        } catch (DataBaseHandlerTablesException $e) {
             return false;
-        } catch (sdbh_deadlock_exception $e) {
+        } catch (DataBaseHandlerDeadlockException $e) {
             if ($deadlock_up) {
                 throw $e;
             } else {
                 continue;
             }
-        } catch (sdbh_lost_connection_exception $e) {
+        } catch (DataBaseHandlerConnectionException $e) {
             continue;
         }
         return $this->sql->affected_rows;
     }
 
     // START TRANSACTION, COMMIT, ROLLBACK convinience functions
+
+    /**
+     * @throws DataBaseHandlerDeadlockException
+     * @throws DataBaseHandlerTablesException
+     * @throws DataBaseHandlerException
+     * @throws DataBaseHandlerConnectionException
+     */
     function start_transaction()
     {
         $this->query_exc("START TRANSACTION");
     }
 
+    /**
+     * @throws DataBaseHandlerDeadlockException
+     * @throws DataBaseHandlerTablesException
+     * @throws DataBaseHandlerException
+     * @throws DataBaseHandlerConnectionException
+     */
     function commit()
     {
         $this->query_exc("COMMIT");
     }
 
+    /**
+     * @throws DataBaseHandlerDeadlockException
+     * @throws DataBaseHandlerTablesException
+     * @throws DataBaseHandlerException
+     * @throws DataBaseHandlerConnectionException
+     */
     function rollback()
     {
         $this->query_exc("ROLLBACK");
@@ -417,9 +419,7 @@ class DataBaseHandler
                 $this->escape_string($username) . "' LIMIT 1");
             $qq = $this->get_all_assoc($q);
             break;
-        } catch (sdbh_deadlock_exception $e) {
-            continue;
-        } catch (sdbh_lost_connection_exception $e) {
+        } catch (DataBaseHandlerDeadlockException|DataBaseHandlerConnectionException $e) {
             continue;
         }
         if (empty($qq[0])) {
@@ -436,6 +436,7 @@ class DataBaseHandler
      * @param deadlock_up - push deadlock exception out or restart silently
      * @return number of matching rows inside array('0' => array(0 => N))
      * for historical reasons
+     * @throws DataBaseHandlerDeadlockException
      */
     public function count_rows($tbl_name, $select_array, $deadlock_up = False)
     {
@@ -443,13 +444,13 @@ class DataBaseHandler
             $query = $this->query_exc("SELECT COUNT(*) as `0` FROM `$tbl_name`
 				WHERE " . $this->make_str($select_array, 'AND', $tbl_name));
             break;
-        } catch (sdbh_deadlock_exception $e) {
+        } catch (DataBaseHandlerDeadlockException $e) {
             if ($deadlock_up) {
                 throw $e;
             } else {
                 continue;
             }
-        } catch (sdbh_lost_connection_exception $e) {
+        } catch (DataBaseHandlerConnectionException $e) {
             continue;
         }
         return $this->get_all_assoc($query);
