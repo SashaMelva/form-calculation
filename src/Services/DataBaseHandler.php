@@ -215,15 +215,15 @@ class DataBaseHandler
 				" . $this->make_str($select_array, 'AND', $tbl_name)
             );
             break;
-        } catch (DataBaseHandlerTablesException $e) {
+        } catch (DataBaseHandlerTablesException $ex) {
             break;
-        } catch (DataBaseHandlerDeadlockException $e) {
+        } catch (DataBaseHandlerDeadlockException $ex) {
             if ($deadlock_up) {
-                throw $e;
+                throw $ex;
             } else {
                 continue;
             }
-        } catch (DataBaseHandlerConnectionException $e) {
+        } catch (DataBaseHandlerConnectionException $ex) {
             continue;
         }
         $a_rows = mysqli_affected_rows($this->sql);
@@ -270,16 +270,16 @@ class DataBaseHandler
                 " $lock_str"
             );
             break;
-        } catch (DataBaseHandlerTablesException $e) {
+        } catch (DataBaseHandlerTablesException $ex) {
             $query = false;
             break;
-        } catch (DataBaseHandlerDeadlockException $e) {
+        } catch (DataBaseHandlerDeadlockException $ex) {
             if ($deadlock_up) {
-                throw $e;
+                throw $ex;
             } else {
                 continue;
             }
-        } catch (DataBaseHandlerConnectionException $e) {
+        } catch (DataBaseHandlerConnectionException $ex) {
             continue;
         }
         return $this->get_all_assoc($query);
@@ -297,13 +297,13 @@ class DataBaseHandler
         while (True) try {
             $this->query_exc("DELETE FROM $tbl_name WHERE " . $this->make_str($delete_array, 'AND', $tbl_name));
             break;
-        } catch (DataBaseHandlerDeadlockException $e) {
+        } catch (DataBaseHandlerDeadlockException $ex) {
             if ($deadlock_up) {
-                throw $e;
+                throw $ex;
             } else {
                 continue;
             }
-        } catch (DataBaseHandlerConnectionException $e) {
+        } catch (DataBaseHandlerConnectionException $ex) {
             continue;
         }
         return $this->sql->affected_rows;
@@ -356,15 +356,15 @@ class DataBaseHandler
         while (True) try {
             $this->query_exc("INSERT IGNORE INTO `$tbl_name` ($keys_csv) VALUES $val");
             break;
-        } catch (DataBaseHandlerTablesException $e) {
+        } catch (DataBaseHandlerTablesException $ex) {
             return false;
-        } catch (DataBaseHandlerDeadlockException $e) {
+        } catch (DataBaseHandlerDeadlockException $ex) {
             if ($deadlock_up) {
-                throw $e;
+                throw $ex;
             } else {
                 continue;
             }
-        } catch (DataBaseHandlerConnectionException $e) {
+        } catch (DataBaseHandlerConnectionException $ex) {
             continue;
         }
         return $this->sql->affected_rows;
@@ -419,7 +419,7 @@ class DataBaseHandler
                 $this->escape_string($username) . "' LIMIT 1");
             $qq = $this->get_all_assoc($q);
             break;
-        } catch (DataBaseHandlerDeadlockException|DataBaseHandlerConnectionException $e) {
+        } catch (DataBaseHandlerDeadlockException|DataBaseHandlerConnectionException $ex) {
             continue;
         }
         if (empty($qq[0])) {
@@ -444,13 +444,13 @@ class DataBaseHandler
             $query = $this->query_exc("SELECT COUNT(*) as `0` FROM `$tbl_name`
 				WHERE " . $this->make_str($select_array, 'AND', $tbl_name));
             break;
-        } catch (DataBaseHandlerDeadlockException $e) {
+        } catch (DataBaseHandlerDeadlockException $ex) {
             if ($deadlock_up) {
-                throw $e;
+                throw $ex;
             } else {
                 continue;
             }
-        } catch (DataBaseHandlerConnectionException $e) {
+        } catch (DataBaseHandlerConnectionException $ex) {
             continue;
         }
         return $this->get_all_assoc($query);
