@@ -2,7 +2,9 @@
 
 namespace App\Controllers;
 
-use App\Services\DataBaseHandler;
+use App\Models\ProductsModel;
+use App\Models\SettingsModel;
+use App\Services\CalculatePrice;
 use App\Services\Response;
 use App\Services\sdbh_deadlock_exception;
 use App\Services\sdbh_exception;
@@ -17,70 +19,17 @@ class StartController
      */
     public function showStartView(): void
     {
-        $services = unserialize((new DataBaseHandler)->mselect_rows('a25_settings', ['set_key' => 'services'], 0, 1, 'id')[0]['set_value']);
-        $products = (new DataBaseHandler)->mselect_rows('a25_products', 'NAME', 0, 100, 'ID');
+        $services = unserialize((new SettingsModel)->getSettingsBySetKey('services'));
+        $products = (new ProductsModel())->getAll(100);
 
         $html = (string)new View(ViewPath::Main, ['services' => $services, 'products' => $products]);
         $templateWithContent = new View(ViewPath::Template, ['content' => $html]);
         (new Response((string)$templateWithContent))->echo();
     }
 
-    public function updatePriceForTariff(): void
+    public function showResultView($productId, $countDay, $services1, $services2, $services3, $services4): void
     {
-        $result = $this->getParamFromResponseForFetch();
-        $result = $this->getProductTariffForDay($result['productId'], $result['countDay']);
-
-        echo $result;
-    }
-
-    private function getProductTariffForDay($productId, $countDay): int
-    {
-        $dataBaseHandler = new DataBaseHandler();
-        $productTariff = unserialize($dataBaseHandler->mselect_rows('a25_products', ['ID' => $productId], 0, 1, 'id')[0]['TARIFF']);
-
-
-        if (!$productTariff) {
-            $price = $dataBaseHandler->mselect_rows('a25_products', ['ID' => $productId], 0, 1, 'id')[0]['PRICE'];
-            return (int)$price;
-        }
-
-        $days =  [];
-        foreach ($productTariff as $key => $value) {
-            $days[] = $key;
-        }
-
-        $dayForTariffPrise = 0;
-        for($i = 0; $i < count($days); $i++) {
-            if ($days[$i] <= $countDay && $countDay <= $days[$i + 1]){
-                $dayForTariffPrise = $days[$i];
-            }
-        }
-
-        return $productTariff[$dayForTariffPrise];
-    }
-
-    private function getParamFromResponseForFetch()
-    {
-        return json_decode(file_get_contents('php://input'), true);
-    }
-
-    public function calculatePrice($productId, $countDay, $services1, $services2, $services3, $services4): void
-    {
-        $sum = 0;
-
-        if (!is_null($services1)) {
-            $sum += (int)$services1;
-        }
-        if (!is_null($services2)) {
-            $sum += (int)$services2;
-        }
-        if (!is_null($services3)) {
-            $sum += (int)$services3;
-        }
-        if (!is_null($services4)) {
-            $sum += (int)$services4;
-        }
-        $sum += $this->getProductTariffForDay($productId, $countDay) * $countDay;
+        $sum = (new CalculatePrice())->calculatePrice($productId, $countDay, $services1, $services2, $services3, $services4);
 
         $html = (string)new View(ViewPath::Result, ['resultSum' => $sum]);
         $templateWithContent = new View(ViewPath::Template, ['content' => $html]);

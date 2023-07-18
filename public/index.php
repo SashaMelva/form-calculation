@@ -2,6 +2,7 @@
 require_once dirname(__DIR__, 1) . DIRECTORY_SEPARATOR . "config" . DIRECTORY_SEPARATOR . "config.php";
 
 use App\Controllers\StartController;
+use App\Services\CalculatePrice;
 use App\Services\Response;
 use App\Services\View;
 use App\Services\ViewPath;
@@ -10,8 +11,8 @@ if (isset($_SERVER['REQUEST_URI'])) {
     try {
         match ($_SERVER['REQUEST_URI']) {
             '/' => (new StartController())->showStartView(),
-            '/calculate' => (new StartController())->calculatePrice($_POST['product'], $_POST['countDay'],$_POST['services1-300'], $_POST['services2-600'],$_POST['services3-100'], $_POST['services4-0']),
-            '/updatePrice' => (new StartController())->updatePriceForTariff(),
+            '/calculate' => (new StartController())->showResultView($_POST['product'], $_POST['countDay'],$_POST['services1-300'], $_POST['services2-600'],$_POST['services3-100'], $_POST['services4-0']),
+            '/updatePrice' => (new CalculatePrice())->updatePriceForTariff(),
             default => throw new Exception('Unexpected match value'),
         };
     } catch (Exception $e) {
