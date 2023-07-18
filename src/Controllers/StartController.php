@@ -45,13 +45,19 @@ class StartController
             return (int)$price;
         }
 
+        $days =  [];
         foreach ($productTariff as $key => $value) {
-            if ($key <= $countDay) {
-                return (int)$value;
+            $days[] = $key;
+        }
+
+        $dayForTariffPrise = 0;
+        for($i = 0; $i < count($days); $i++) {
+            if ($days[$i] <= $countDay && $countDay <= $days[$i + 1]){
+                $dayForTariffPrise = $days[$i];
             }
         }
 
-        return 0;
+        return $productTariff[$dayForTariffPrise];
     }
 
     private function getParamFromResponseForFetch()
