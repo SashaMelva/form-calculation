@@ -19,7 +19,7 @@
                         </select>
 
                         <label for="countDay" class="form-label">Количество дней:</label>
-                        <input type="number" class="form-control" id="countDay" name="countDay" min="1" max="30" onchange="updatePrise()" required>
+                        <input type="number" class="form-control" id="countDay" name="countDay" min="1" max="30" onblur="updatePrise()" required>
                         <div>
                             <p>Цена по тарифу за авто в день: <span id="price"></span></p>
                         </div>
