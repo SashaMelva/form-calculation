@@ -15,9 +15,9 @@ try {
 
 define('PROJECT_DIR', dirname(__DIR__));
 
-define('API_DOMAIN', $_ENV['API_DOMAIN']);
-define('API_KEY', $_ENV['API_KEY']);
-define('HOST_REDIS', $_ENV['HOST_REDIS']);
-define('PORT_REDIS', $_ENV['PORT_REDIS']);
-
-const DATA_FOLDER_FOR_COLLECTION = PROJECT_DIR . DIRECTORY_SEPARATOR . "data" . DIRECTORY_SEPARATOR . "collection";
+define('MYSQL_USER', $_ENV['MYSQL_USER']);
+define('MYSQL_ROOT_PASSWORD', $_ENV['MYSQL_ROOT_PASSWORD']);
+define('MYSQL_DATABASE', $_ENV['MYSQL_DATABASE']);
+define('MYSQL_PASSWORD', $_ENV['MYSQL_PASSWORD']);
+define('MYSQL_HOST', $_ENV['MYSQL_HOST']);
+define('MYSQL_PORT', $_ENV['MYSQL_PORT']);

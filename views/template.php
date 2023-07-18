@@ -13,6 +13,7 @@
 </head>
 <body>
 <main id="app" class="main">
+    <?= $this->arguments['content']?>
 </main>
 </body>
 </html>

@@ -9,7 +9,8 @@
         "ext-simplexml": "*",
         "ext-pdo": "*",
         "vlucas/phpdotenv": "^5.5",
-        "cocur/slugify": "^4.3"
+        "cocur/slugify": "^4.3",
+        "ext-mysqli": "*"
     },
     "autoload": {
         "psr-4": {

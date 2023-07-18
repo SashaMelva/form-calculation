@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-readonly class Response
+class Response
 {
     public function __construct(
         private string $html,
