@@ -3,11 +3,12 @@
 namespace App\Services;
 
 use App\Models\ProductsModel;
+use App\Services\Exception\DataBaseHandlerException;
 
 class CalculateCost
 {
+
     /**
-     * @throws DataBaseHandlerDeadlockException
      * @throws DataBaseHandlerException
      */
     public function updatePriceForTariff(): void
@@ -18,8 +19,8 @@ class CalculateCost
         echo $result;
     }
 
+
     /**
-     * @throws DataBaseHandlerDeadlockException
      * @throws DataBaseHandlerException
      */
     public function getPriceAccordingTariffForDay($productId, $countDay): int
@@ -50,8 +51,8 @@ class CalculateCost
         return (int)$productTariff[$dayForTariffPrise];
     }
 
+
     /**
-     * @throws DataBaseHandlerDeadlockException
      * @throws DataBaseHandlerException
      */
     public function calculate(int $productId, int $countDay, array $services): int

@@ -3,8 +3,7 @@
 namespace App\Models;
 
 use App\Services\DataBaseHandler;
-use App\Services\DataBaseHandlerDeadlockException;
-use App\Services\DataBaseHandlerException;
+use App\Services\Exception\DataBaseHandlerException;
 
 class SettingsModel
 {
@@ -15,8 +14,8 @@ class SettingsModel
         $this->dataBaseHandler = new DataBaseHandler();
     }
 
+
     /**
-     * @throws DataBaseHandlerDeadlockException
      * @throws DataBaseHandlerException
      */
     public function getSettingsBySetKey($setKey)

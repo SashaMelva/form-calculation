@@ -5,16 +5,15 @@ namespace App\Controllers;
 use App\Models\ProductsModel;
 use App\Models\SettingsModel;
 use App\Services\CalculateCost;
+use App\Services\Exception\DataBaseHandlerException;
 use App\Services\Response;
-use App\Services\DataBaseHandlerDeadlockException;
-use App\Services\DataBaseHandlerException;
 use App\Services\View;
 use App\Services\ViewPath;
 
 class StartController
 {
+
     /**
-     * @throws DataBaseHandlerDeadlockException
      * @throws DataBaseHandlerException
      */
     public function showStartView(): void
@@ -28,7 +27,6 @@ class StartController
     }
 
     /**
-     * @throws DataBaseHandlerDeadlockException
      * @throws DataBaseHandlerException
      */
     public function showResultView(int $productId, int $countDay, array $services): void
