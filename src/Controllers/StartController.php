@@ -25,26 +25,43 @@ class StartController
         (new Response((string)$templateWithContent))->echo();
     }
 
-//    public function showFormView(): void
-//    {
-//        $html = (string)new View(ViewPath::Form);
-//        $templateWithContent = new View(ViewPath::Template, ['content' => $html]);
-//        (new Response((string)$templateWithContent))->echo();
-//    }
 
-    public function updatePriceForTariff($countDay)
+    public function updatePriceForTariff(): void
     {
-        var_dump($countDay);
+        $result = $this->getParamFromResponseForFetch();
+        $result = $this->getProductTariffForDay($result['productId'], $result['countDay']);
+
+        echo $result;
     }
 
-    /**
-     * @throws sdbh_deadlock_exception
-     * @throws sdbh_exception
-     */
+    private function getProductTariffForDay($productId, $countDay): int
+    {
+        $dataBaseHandler = new DataBaseHandler();
+        $productTariff = unserialize($dataBaseHandler->mselect_rows('a25_products', ['ID' => $productId], 0, 1, 'id')[0]['TARIFF']);
+
+
+        if (!$productTariff) {
+            $price = $dataBaseHandler->mselect_rows('a25_products', ['ID' => $productId], 0, 1, 'id')[0]['PRICE'];
+            return (int)$price;
+        }
+
+        foreach ($productTariff as $key => $value) {
+            if ($key <= $countDay) {
+                return (int)$value;
+            }
+        }
+
+        return 0;
+    }
+
+    private function getParamFromResponseForFetch()
+    {
+        return json_decode(file_get_contents('php://input'), true);
+    }
+
     public function calculatePrice($productId, $countDay, $services1, $services2, $services3, $services4): void
     {
         $sum = 0;
-        $dataBaseHandler = new DataBaseHandler();
 
         if (!is_null($services1)) {
             $sum += (int)$services1;
@@ -58,21 +75,7 @@ class StartController
         if (!is_null($services4)) {
             $sum += (int)$services4;
         }
-
-        $productTariff = unserialize($dataBaseHandler->mselect_rows('a25_products', ['ID' => $productId], 0, 1, 'id')[0]['TARIFF']);
-
-
-        if (!$productTariff) {
-            $price = $dataBaseHandler->mselect_rows('a25_products', ['ID' => $productId], 0, 1, 'id')[0]['PRICE'];
-            $sum += (int)$price;
-        }
-
-        foreach ($productTariff as $key => $value) {
-            if ($key >= $countDay){
-                $sum += (int)$value;
-                break;
-            }
-        }
+        $sum += $this->getProductTariffForDay($productId, $countDay) * $countDay;
 
         $html = (string)new View(ViewPath::Result, ['resultSum' => $sum]);
         $templateWithContent = new View(ViewPath::Template, ['content' => $html]);

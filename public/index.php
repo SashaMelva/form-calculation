@@ -12,7 +12,7 @@ if (isset($_SERVER['REQUEST_URI'])) {
         match ($_SERVER['REQUEST_URI']) {
             '/' => (new StartController())->showStartView(),
             '/calculate' => (new StartController())->calculatePrice($_POST['product'], $_POST['countDay'],$_POST['services1-300'], $_POST['services2-600'],$_POST['services3-100'], $_POST['services4-0']),
-            '/updatePrice' => (new StartController())->updatePriceForTariff($_POST['countDay']),
+            '/updatePrice' => (new StartController())->updatePriceForTariff(),
             default => throw new Exception('Unexpected match value'),
         };
 //    } catch (Exception $e) {

@@ -20,13 +20,16 @@
 
                         <label for="countDay" class="form-label">Количество дней:</label>
                         <input type="number" class="form-control" id="countDay" name="countDay" min="1" max="30" onchange="updatePrise(this)" required>
+                        <div>
+                            <p>Цена по тарифу за авто в день: <span id="price"></span></p>
+                        </div>
 
                         <label for="customRange1" class="form-label">Дополнительно:</label>
 
                         <?php $j = 1;
                         foreach ($this->arguments['services'] as $name => $price) : ?>
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="services<?= $j ?>-<?= $price ?>" value="<?= $price ?>" id="flexCheckChecked<?= $j ?>" checked>
+                                <input class="form-check-input" type="checkbox" name="services<?= $j ?>-<?= $price ?>" value="<?= $price ?>" id="flexCheckChecked<?= $j ?>">
                                 <label class="form-check-label" for="flexCheckChecked1">
                                     <?= $name ?> за <?= $price ?>
                                 </label>
