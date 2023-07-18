@@ -12,14 +12,14 @@
                 <div class="col-9">
                     <form action="/calculate" method="POST" id="form">
                         <label class="form-label" for="product">Выберите продукт:</label>
-                        <select class="form-select" name="product" id="product">
+                        <select class="form-select" name="product" id="product" onchange="updatePrise()">
                             <?php foreach ($this->arguments['products'] as $product):?>
                                 <option value="<?= $product['ID'] ?>"><?= $product['NAME'] ?> за <?= $product['PRICE'] ?></option>
                             <?php endforeach?>
                         </select>
 
                         <label for="countDay" class="form-label">Количество дней:</label>
-                        <input type="number" class="form-control" id="countDay" name="countDay" min="1" max="30" onchange="updatePrise(this)" required>
+                        <input type="number" class="form-control" id="countDay" name="countDay" min="1" max="30" onchange="updatePrise()" required>
                         <div>
                             <p>Цена по тарифу за авто в день: <span id="price"></span></p>
                         </div>

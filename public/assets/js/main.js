@@ -1,5 +1,6 @@
-function updatePrise(value) {
-    let countDay = value.value;
+function updatePrise() {
+    const inputCountDay = document.querySelector('#countDay');
+    let countDay = inputCountDay.value;
     let spanForPriceTariff =  document.querySelector('#price')
     if (countDay === '' || countDay > 30 || countDay < 1 ) {
         spanForPriceTariff.innerHTML = '';
