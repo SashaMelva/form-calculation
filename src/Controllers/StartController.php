@@ -25,7 +25,6 @@ class StartController
         (new Response((string)$templateWithContent))->echo();
     }
 
-
     public function updatePriceForTariff(): void
     {
         $result = $this->getParamFromResponseForFetch();
