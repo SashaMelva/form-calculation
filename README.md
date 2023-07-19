@@ -11,11 +11,12 @@ form calculation for test projet - calculates the cost of renting a car in accor
 
 - **Download cmposer**
   `composer install`
+  `composer update`
 
 - **Run docker**
   `docker compose up`
 
-- **Run docker**
+- **Export dump**
   `docker exec -i name_container_mysql mysql -uLogin -pPassword name_db < config/db/sql.sql`
   
 - **The site is available at this address**
